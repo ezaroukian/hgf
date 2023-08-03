@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-preload@1.0.0"></script>
+    <link href="https://unpkg.com/jspsych@7.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+</body>
+<script>
+
+    /* initialize jsPsych */
+    var jsPsych = initJsPsych({
+        on_finish: function () {
+            jsPsych.data.displayData();
+        }
+    });
+
+    /* create timeline */
+    var timeline = [];
+
+    /* randomize between participants (1 = good good, 2 = good bad, 3 = bad good, 4 = bad bad) */
+    var cond = Math.floor(Math.random() * 4  + 1);
+    jsPsych.data.addProperties({condition: cond});
+
+    /* preload images */
+    var preload = {
+        type: jsPsychPreload,
+        images: ['img/0.png', 'img/25.png', 'img/35.png', 'img/45.png', 'img/55.png', 'img/65.png', 'img/75.png', 'img/100.png', 'img/50.png', 'img/orange.png', 'img/blue.png']
+    };
+    timeline.push(preload);
+
+    /* define welcome message trial */
+    var welcome = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: "Welcome to the experiment. Press any key to begin."
+    };
+    timeline.push(welcome);
+
+    /* define instructions trial */
+    var instructions = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>In this exepriment, you will be given information about a signal that
+        randomly flashes orange or blue throughout the day. The total amount of time
+        that the signal spends in these state any given day is known, but the state of 
+        the signal at any given moment is not. Your task is to guess
+        whether the sensor is orange or blue at a given moment given daily totals, 
+        plus information about that specific moment from a sensor of unknown reliability.</p>
+        <p>For example, the pie chart below shows that the signal was on for 50% 
+        of the day and off for 50% of the day. For the moment in question, the 
+        sensor indicates that the signal was orange. </P>
+        <p>To guess that the signal was <strong>orange</strong> at that momement, press the letter <strong>o</strong>.</p>
+        <p>To guess that the signal was <strong>blue</strong> at that momement, press the letter <strong>b</strong>.</p>
+        <div style='width: 600px; margin: auto;'>
+        <div style='width:50%; float:left; bottom: 0;'><img src='img/50.png' height='300'></img>
+        <p class='small'><strong>Daily total</strong></p></div>
+        <div style='margin-left:50%; bottom: 0;'><img src='img/orange.png' height='300'></img>
+        <p class='small'><strong>Sensor</strong></p></div>
+        </div>
+        <p>Press any key to begin.</p>
+      `,
+        post_trial_gap: 500
+    };
+    timeline.push(instructions);
+
+    /* define trial stimuli array for timeline variables 
+        Get ground truth first
+        Use ground truth to calculate cue (80% accurate or 20% accurate)
+    */
+    var gt = "None";
+    var getGt = function (prob) {
+        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'b'; } else { gt = 'o'; }
+        console.log("getGt() = " + gt);
+        return gt;
+    }
+
+    var getCue = function () {
+        if (jsPsych.randomization.randomInt(1, 100) <= 80) {
+            cue = gt;
+            if(gt=='o'){
+                sens = "img/orange.png";
+            } else {
+                sens = "img/blue.png";
+            }
+        } else if (gt == 'b') {
+            cue = 'o';
+            sens = "img/orange.png";
+        } else {
+            cue = 'b';
+            sens = "img/blue.png";
+        }
+
+        return "<div style='margin-left:50%'><img src="+sens+" width=150></img><p>Sensor says: " + cue + "</p></div><p>Press o for orange, b for blue</p><p>GT: " + gt + "</p>";
+    }
+
+    var getBadCue = function () {
+        if (jsPsych.randomization.randomInt(1, 100) <= 20) {
+            cue = gt;
+            if(gt=='o'){
+                sens = "img/orange.png";
+            } else {
+                sens = "img/blue.png";
+            }
+        } else if (gt == 'b') {
+            cue = 'o';
+            sens = "img/orange.png";
+        } else {
+            cue = 'b';
+            sens = "img/blue.png";
+        }
+        return "<div style='margin-left:50%'><img src=" + sens +" width=150></img><p>Bad sensor says: " + cue + "</p></div><p>Press o for orange, b for blue</p><p>GT: " + gt + "</p>";
+    }
+
+    var output;
+    var getStimulus = function(prob, gb){
+        //Get ground truth
+        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'b'; } else { gt = 'o'; };
+
+        var odd = jsPsych.randomization.randomInt(1, 100);
+        if (gb == "good"){            
+            if (odd <= 80) {//80% chance reliable
+                cue = gt;
+            } else if (gt == 'b') {//20% chance wrong
+                cue = 'o';
+            } else {
+                cue = 'b';
+            }
+        } else if (gb == "bad"){
+            if (odd <= 20) {//20% chance reliable
+                cue = gt;
+            } else if (gt == 'b') {//80% chance wrong
+                cue = 'o';
+            } else {
+                cue = 'b';
+            }
+
+        }
+        if(cue=='o'){
+                    sens = "img/orange.png";
+                } else {
+                    sens = "img/blue.png";
+            }
+        output = "<div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p>Daily total</p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p>Sensor</p></div></div>";
+        
+        return {stimulus: output, correct_response: gt };
+    }
+    //Maybe I want to use non-image keyboard response for more control
+    var test_stimuli_g = [
+        getStimulus(25,"good") ,
+        getStimulus(35,"good") ,
+        getStimulus(45,"good") ,
+        getStimulus(55,"good") ,
+        getStimulus(65,"good") ,
+        getStimulus(75,"good") 
+    ];
+    console.log(test_stimuli_g);
+    var test_stimuli_b = [
+        getStimulus(25,"bad"), 
+        getStimulus(35,"bad"),
+        getStimulus(45,"bad"), 
+        getStimulus(55,"bad"), 
+        getStimulus(65,"bad"), 
+        getStimulus(75,"bad")
+    ];
+
+    /* define test trials and results*/
+    var results = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+
+            var getResp = function(res){
+                if(res=="o"){
+                    return "orange (o)";
+                } else if(res=="b"){
+                    return "blue (b)";
+                } else {
+                    return "ERROR RETRIEVING RESPONSE";
+                }
+            }
+
+            var lasttrialdata = jsPsych.data.getLastTrialData();
+            console.log(lasttrialdata.select('correct').values[0]);
+            if (lasttrialdata.select('correct').values[0]) { var cor = "Correct"; } else { var cor = "Incorrect"; }
+            var pie =lasttrialdata.select('stimulus').values;
+            var sensor = lasttrialdata.select('cue').values;
+            var resp = getResp(lasttrialdata.select('response').values);
+            console.log(lasttrialdata);
+
+            var trials = jsPsych.data.get().filter({ task: 'response' });
+            var correct_trials = trials.filter({ correct: true });
+            var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+            var rt = Math.round(correct_trials.select('rt').mean());
+
+           
+            return pie +
+                    `<p>Your response: ${resp}</p>
+                    <p>${cor}!</p>
+                    <p>You responded correctly on ${correct_trials.count()}/${trials.count()} trials (${accuracy}%).</p>
+                    <p>Press any key to continue</p>`;
+
+        },
+        choices: "ALL_KEYS",
+        data: {
+            task: 'results'
+        }
+    };
+
+    var test = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: jsPsych.timelineVariable('stimulus'),
+        stimulus_width: 300,
+        choices: ['o', 'b'],
+        prompt: "<p>Press <strong>o</strong> for orange or <strong>b</strong> for blue.</p>",
+        data: {
+            task: 'response',
+            //cue: jsPsych.timelineVariable('prompt'),
+            correct_response: jsPsych.timelineVariable('correct_response')
+        },
+        on_finish: function (data) {
+            data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+        }
+    };
+
+    /* define test procedure
+
+Can I get this to change the cue probability for the second half?
+Make test proceedures for all 4 and randomly sample which to push to timeline? (Or rotate based on counter or participant ID??)
+*/
+    var test_procedure_g = {
+        timeline: [test, results],
+        timeline_variables: test_stimuli_g,
+        repetitions: 1,
+        randomize_order: true
+    };
+    
+    var test_procedure_b = {
+        timeline: [test, results],
+        timeline_variables: test_stimuli_b,
+        repetitions: 1,
+        randomize_order: true
+    };
+    
+
+    switch (cond) {
+        case 1:
+            timeline.push(test_procedure_g);
+            timeline.push(test_procedure_g);
+            break;
+        case 2:
+            timeline.push(test_procedure_g);
+            timeline.push(test_procedure_b);
+            break;
+        case 3:
+            timeline.push(test_procedure_b);
+            timeline.push(test_procedure_g);
+            break;
+        case 4:
+            timeline.push(test_procedure_b);
+            timeline.push(test_procedure_b);
+            break;
+        default:
+            alert("No procedure pushed to timeline.");
+            break;
+
+    }
+
+
+    /* define debrief */
+    var debrief_block = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function () {
+
+            var trials = jsPsych.data.get().filter({ task: 'response' });
+            var correct_trials = trials.filter({ correct: true });
+            var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
+            var rt = Math.round(correct_trials.select('rt').mean());
+
+            return `<p>You responded correctly on ${accuracy}% of the trials.</p>
+          <p>Your average response time was ${rt}ms.</p>
+          <p>Press any key to complete the experiment. Thank you!</p>`;
+
+        }
+    };
+    timeline.push(debrief_block);
+
+    /* start the experiment */
+    jsPsych.run(timeline);
+
+</script>
+</html>
