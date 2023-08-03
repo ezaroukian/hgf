@@ -6,12 +6,17 @@
     <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.0.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.0.0"></script>
+	<script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
     <link href="https://unpkg.com/jspsych@7.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
 </body>
 <script>
 
+	/* some variables for DataPipe and sending data to OSF */
+    const subject_id = jsPsych.randomization.randomID(10);
+    const filename = `${subject_id}.csv`;
+            
     /* initialize jsPsych */
     var jsPsych = initJsPsych({
         on_finish: function () {
@@ -286,6 +291,18 @@ Make test proceedures for all 4 and randomly sample which to push to timeline? (
         }
     };
     timeline.push(debrief_block);
+
+	/* send data to OSF (DataPipe) */
+    const save_data = {
+        type: jsPsychPipe,
+        action: "save",
+        experiment_id: "kD3R4dl2QWF6",
+        filename: filename,
+        data_string: ()=>jsPsych.data.get().csv()
+    };
+    timeline.push(save_data);
+
+
 
     /* start the experiment */
     jsPsych.run(timeline);
