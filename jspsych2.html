@@ -50,30 +50,39 @@
     var instructions = {
         type: jsPsychHtmlKeyboardResponse,
         stimulus: `
-        <p>In this exepriment, you will be given information about a signal that
-        randomly flashes orange or blue throughout the day. Imagine the signal as something like this:</p>
+        <p>In this exepriment, you will be given information about a light that
+        randomly flashes orange or blue throughout the day. Imagine the light as something like this:</p>
         <div><img src='img/signal.gif' height='300'></img>
         <p>The total amount of time
-        that the signal spends in each state on any given day is known, but the state of 
-        the signal at any given moment is not. Your task is to guess
-        whether the sensor is orange or blue at a given moment knowing only daily totals, 
-        plus information about that specific moment from a sensor of unknown reliability.</p>
-        <p>For example, the pie chart below shows that the signal was on for 50% 
-        of the day and off for 50% of the day. For the moment in question, the 
-        sensor indicates that the signal was orange. </P>
-        <p>To guess that the signal was <strong>orange</strong> at that momement, press the letter <strong>o</strong>.</p>
-        <p>To guess that the signal was <strong>blue</strong> at that momement, press the letter <strong>b</strong>.</p>
+        that the light spends in each color on any given day is known, but the color of 
+        the light at any given moment is not. Your task is to guess
+        whether the light is orange or blue at a given moment knowing only daily totals, 
+        plus information about that specific moment from an experimental sensor of unknown reliability.</p>
+
+        <p>Press any key continue to an example.</p>
+      `,
+        post_trial_gap: 500
+    };
+    timeline.push(instructions);
+    var practice = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>For example, the pie chart below shows that the light was orange for 50% 
+        of the day and blue for 50% of the day. For the moment in question, the experimental
+        sensor indicates that the light was orange. </P>
+        <p>To guess that the light was <strong>orange</strong> at that momement, press the letter <strong>n</strong>.</p>
+        <p>To guess that the light was <strong>blue</strong> at that momement, press the letter <strong>m</strong>.</p>
         <div style='width: 600px; margin: auto;'>
         <div style='width:50%; float:left; bottom: 0;'><img src='img/50.png' height='300'></img>
         <p class='small'><strong>Daily total</strong></p></div>
         <div style='margin-left:50%; bottom: 0;'><img src='img/orange.png' height='300'></img>
-        <p class='small'><strong>Sensor</strong></p></div>
+        <p class='small'><strong>Experimental sensor</strong></p></div>
         </div>
         <p>Press any key to begin.</p>
       `,
         post_trial_gap: 500
     };
-    timeline.push(instructions);
+    timeline.push(practice);
 
     /* define trial stimuli array for timeline variables 
         Get ground truth first
@@ -81,7 +90,7 @@
     */
     var gt = "None";
     var getGt = function (prob) {
-        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'b'; } else { gt = 'o'; }
+        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'b'; } else { gt = 'n'; }
         console.log("getGt() = " + gt);
         return gt;
     }
@@ -89,16 +98,16 @@
     var getCue = function () {
         if (jsPsych.randomization.randomInt(1, 100) <= 80) {
             cue = gt;
-            if(gt=='o'){
+            if(gt=='n'){
                 sens = "img/orange.png";
             } else {
                 sens = "img/blue.png";
             }
-        } else if (gt == 'b') {
-            cue = 'o';
+        } else if (gt == 'm') {
+            cue = 'n';
             sens = "img/orange.png";
         } else {
-            cue = 'b';
+            cue = 'm';
             sens = "img/blue.png";
         }
 
@@ -108,51 +117,51 @@
     var getBadCue = function () {
         if (jsPsych.randomization.randomInt(1, 100) <= 20) {
             cue = gt;
-            if(gt=='o'){
+            if(gt=='n'){
                 sens = "img/orange.png";
             } else {
                 sens = "img/blue.png";
             }
-        } else if (gt == 'b') {
-            cue = 'o';
+        } else if (gt == 'm') {
+            cue = 'n';
             sens = "img/orange.png";
         } else {
-            cue = 'b';
+            cue = 'm';
             sens = "img/blue.png";
         }
-        return "<div style='margin-left:50%'><img src=" + sens +" width=150></img><p>Bad sensor says: " + cue + "</p></div><p>Press o for orange, b for blue</p><p>GT: " + gt + "</p>";
+        return "<div style='margin-left:50%'><img src=" + sens +" width=150></img><p>Bad sensor says: " + cue + "</p></div><p>Press n for orange, m for blue</p><p>GT: " + gt + "</p>";
     }
 
     var output;
     var getStimulus = function(prob, gb){
         //Get ground truth
-        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'b'; } else { gt = 'o'; };
+        if (jsPsych.randomization.randomInt(1, 100) <= prob) { gt = 'm'; } else { gt = 'n'; };
 
         var odd = jsPsych.randomization.randomInt(1, 100);
         if (gb == "good"){            
             if (odd <= 80) {//80% chance reliable
                 cue = gt;
-            } else if (gt == 'b') {//20% chance wrong
-                cue = 'o';
+            } else if (gt == 'm') {//20% chance wrong
+                cue = 'n';
             } else {
-                cue = 'b';
+                cue = 'm';
             }
         } else if (gb == "bad"){
             if (odd <= 20) {//20% chance reliable
                 cue = gt;
-            } else if (gt == 'b') {//80% chance wrong
-                cue = 'o';
+            } else if (gt == 'm') {//80% chance wrong
+                cue = 'n';
             } else {
-                cue = 'b';
+                cue = 'm';
             }
 
         }
-        if(cue=='o'){
+        if(cue=='n'){
                     sens = "img/orange.png";
                 } else {
                     sens = "img/blue.png";
             }
-        output = "<div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p>Daily total</p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p>Sensor</p></div></div>";
+        output = "<div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p>Daily total</p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p>Experimental sensor</p></div></div>";
         
         return {stimulus: output, correct_response: gt };
     }
@@ -181,10 +190,10 @@
         stimulus: function () {
 
             var getResp = function(res){
-                if(res=="o"){
-                    return "orange (o)";
-                } else if(res=="b"){
-                    return "blue (b)";
+                if(res=="n"){
+                    return "orange (n)";
+                } else if(res=="m"){
+                    return "blue (m)";
                 } else {
                     return "ERROR RETRIEVING RESPONSE";
                 }
@@ -221,8 +230,8 @@
         type: jsPsychHtmlKeyboardResponse,
         stimulus: jsPsych.timelineVariable('stimulus'),
         stimulus_width: 300,
-        choices: ['o', 'b'],
-        prompt: "<p>Press <strong>o</strong> for orange or <strong>b</strong> for blue.</p>",
+        choices: ['n', 'm'],
+        prompt: "<p>Press <strong>n</strong> for orange or <strong>m</strong> for blue.</p>",
         data: {
             task: 'response',
             //cue: jsPsych.timelineVariable('prompt'),
