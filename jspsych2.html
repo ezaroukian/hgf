@@ -7,6 +7,7 @@
     <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.0.0"></script>
     <script src="https://unpkg.com/@jspsych/plugin-preload@1.0.0"></script>
 	<script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-survey-likert@1.1.2"></script>
     <link href="https://unpkg.com/jspsych@7.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -52,14 +53,14 @@
         stimulus: `
         <p>In this exepriment, you will be given information about a light that
         randomly flashes orange or blue throughout the day. Imagine the light as something like this:</p>
-        <div><img src='img/signal.gif' height='300'></img>
+        <div><img src='img/signalBlackMedium.gif' height='300'></img>
         <p>The total amount of time
         that the light spends in each color on any given day is known, but the color of 
         the light at any given moment is not. Your task is to guess
-        whether the light is orange or blue at a given moment knowing only daily totals, 
-        plus information about that specific moment from an experimental sensor of unknown reliability.</p>
+        whether the light is orange or blue at a given moment knowing 1) daily totals plus 2) information 
+        about that specific moment from an experimental sensor of unknown reliability.</p>
 
-        <p>Press any key continue to an example.</p>
+        <p>Press any key to continue to an example.</p>
       `,
         post_trial_gap: 500
     };
@@ -70,19 +71,30 @@
         <p>For example, the pie chart below shows that the light was orange for 50% 
         of the day and blue for 50% of the day. For the moment in question, the experimental
         sensor indicates that the light was orange. </P>
-        <p>To guess that the light was <strong>orange</strong> at that momement, press the letter <strong>n</strong>.</p>
-        <p>To guess that the light was <strong>blue</strong> at that momement, press the letter <strong>m</strong>.</p>
+        <p>To guess that the light was <b>orange</b> at that momement, press the letter <b>n</b>.</p>
+        <p>To guess that the light was <b>blue</b> at that momement, press the letter <b>m</b>.</p>
         <div style='width: 600px; margin: auto;'>
         <div style='width:50%; float:left; bottom: 0;'><img src='img/50.png' height='300'></img>
-        <p class='small'><strong>Daily total</strong></p></div>
+        <p class='small'><b>Daily total</b></p></div>
         <div style='margin-left:50%; bottom: 0;'><img src='img/orange.png' height='300'></img>
-        <p class='small'><strong>Experimental sensor</strong></p></div>
+        <p class='small'><b>Experimental sensor</b></p></div>
         </div>
-        <p>Press any key to begin.</p>
+        <p>Press any key to continue to additional instructions.</p>
       `,
         post_trial_gap: 500
     };
     timeline.push(practice);
+    var instructions2 = {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: `
+        <p>When you make your decisions, please respond with <b>n</b> (orange) or <b>m</b> (blue) as quickly as possible, while remaining as accurate as possible.</p>
+
+            
+        <p>Press any key to begin the experiment.</p>
+      `,
+        post_trial_gap: 500
+    };
+    timeline.push(instructions2);
 
     /* define trial stimuli array for timeline variables 
         Get ground truth first
@@ -95,7 +107,7 @@
         return gt;
     }
 
-    var getCue = function () {
+    /* var getCue = function () {
         if (jsPsych.randomization.randomInt(1, 100) <= 80) {
             cue = gt;
             if(gt=='n'){
@@ -130,7 +142,7 @@
             sens = "img/blue.png";
         }
         return "<div style='margin-left:50%'><img src=" + sens +" width=150></img><p>Bad sensor says: " + cue + "</p></div><p>Press n for orange, m for blue</p><p>GT: " + gt + "</p>";
-    }
+    } */
 
     var output;
     var getStimulus = function(prob, gb){
@@ -161,7 +173,7 @@
                 } else {
                     sens = "img/blue.png";
             }
-        output = "<div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p>Daily total</p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p>Experimental sensor</p></div></div>";
+        output = "<h2>What color is the light at this moment?</h2><div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p><b>Daily total</b></p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p><b>Experimental sensor</b></p></div></div>";
         
         return {stimulus: output, correct_response: gt };
     }
@@ -199,13 +211,17 @@
                 }
             }
 
-            var lasttrialdata = jsPsych.data.getLastTrialData();
-            console.log(lasttrialdata.select('correct').values[0]);
-            if (lasttrialdata.select('correct').values[0]) { var cor = "Correct"; } else { var cor = "Incorrect"; }
-            var pie =lasttrialdata.select('stimulus').values;
-            var sensor = lasttrialdata.select('cue').values;
-            var resp = getResp(lasttrialdata.select('response').values);
-            console.log(lasttrialdata);
+            var alldata = jsPsych.data.get();
+            var trialdata = alldata.last(2).first();//Get data from 2 trials ago, n/m
+            //console.log(alldata.csv());
+            //console.log(trialdata.csv());
+            //console.log("trialdata.select('correct'):")
+            //console.log(trialdata.select('correct').values[0]);
+            if (trialdata.select('correct').values[0]) { var cor = "Correct"; } else { var cor = "Incorrect"; }
+            var pie =trialdata.select('stimulus').values[0].substring(48,trialdata.select('stimulus').values[0].length);
+            console.log(trialdata.select('stimulus').values[0].substring(48,trialdata.select('stimulus').values[0].length));
+            var sensor = trialdata.select('cue').values;
+            var resp = getResp(trialdata.select('response').values);
 
             var trials = jsPsych.data.get().filter({ task: 'response' });
             var correct_trials = trials.filter({ correct: true });
@@ -213,7 +229,7 @@
             var rt = Math.round(correct_trials.select('rt').mean());
 
            
-            return pie +
+            return "<h2>Results</h2>" + pie +
                     `<p>Your response: ${resp}</p>
                     <p>${cor}!</p>
                     <p>You responded correctly on ${correct_trials.count()}/${trials.count()} trials (${accuracy}%).</p>
@@ -242,20 +258,36 @@
         }
     };
 
+    var confidence = {
+        type: jsPsychSurveyLikert,
+        questions: [
+            {
+            prompt: "Rate your confidence in your response.", 
+            labels: [
+                "Not confident at all", 
+                "Slightly confident", 
+                "Somewhat confident", 
+                "Fairly confident", 
+                "Completely confident"
+            ]
+            }
+        ]
+    };
+
     /* define test procedure
 
 Can I get this to change the cue probability for the second half?
 Make test proceedures for all 4 and randomly sample which to push to timeline? (Or rotate based on counter or participant ID??)
 */
     var test_procedure_g = {
-        timeline: [test, results],
+        timeline: [test, confidence, results],
         timeline_variables: test_stimuli_g,
         repetitions: 1,
         randomize_order: true
     };
     
     var test_procedure_b = {
-        timeline: [test, results],
+        timeline: [test, confidence, results],
         timeline_variables: test_stimuli_b,
         repetitions: 1,
         randomize_order: true
