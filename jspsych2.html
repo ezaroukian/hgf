@@ -175,7 +175,7 @@
             }
         output = "<h2>What color is the light at this moment?</h2><div style='width: 600px;'><div style='width:50%; float:left; bottom: 0;'><img src='img/"+prob+".png' height=300></img><p><b>Daily total</b></p></div><div style='margin-left:50%; bottom: 0;'><img src='"+sens+"' height=300></img><p><b>Experimental sensor</b></p></div></div>";
         
-        return {stimulus: output, correct_response: gt };
+        return {stimulus: output, correct_response: gt, cue: cue };
     }
     //Maybe I want to use non-image keyboard response for more control
     var test_stimuli_g = [
@@ -250,7 +250,7 @@
         prompt: "<p>Press <strong>n</strong> for orange or <strong>m</strong> for blue.</p>",
         data: {
             task: 'response',
-            //cue: jsPsych.timelineVariable('prompt'),
+            cue: jsPsych.timelineVariable('cue'),//not working
             correct_response: jsPsych.timelineVariable('correct_response')
         },
         on_finish: function (data) {
