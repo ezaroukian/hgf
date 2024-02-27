@@ -250,11 +250,12 @@
         prompt: "<p>Press <strong>n</strong> for orange or <strong>m</strong> for blue.</p>",
         data: {
             task: 'response',
-            cue: jsPsych.timelineVariable('cue'),//not working
+            cue: jsPsych.timelineVariable('cue'),
             correct_response: jsPsych.timelineVariable('correct_response')
         },
         on_finish: function (data) {
             data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+			data.matchCue = jsPsych.pluginAPI.compareKeys(data.response, data.cue);
         }
     };
 
