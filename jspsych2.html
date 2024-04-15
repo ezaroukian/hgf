@@ -199,6 +199,7 @@
     /* define test trials and results*/
     var results = {
         type: jsPsychHtmlKeyboardResponse,
+		trial_type_specific: 'results',
         stimulus: function () {
 
             var getResp = function(res){
@@ -217,13 +218,13 @@
             //console.log(trialdata.csv());
             //console.log("trialdata.select('correct'):")
             //console.log(trialdata.select('correct').values[0]);
-            if (trialdata.select('correct').values[0]) { var cor = "Correct"; } else { var cor = "Incorrect"; }
+            if (trialdata.select('correct').values[0]) { var cor = "<b>Correct</b>"; } else { var cor = "<b>Incorrect</b>"; }
             var pie =trialdata.select('stimulus').values[0].substring(48,trialdata.select('stimulus').values[0].length);
             console.log(trialdata.select('stimulus').values[0].substring(48,trialdata.select('stimulus').values[0].length));
             var sensor = trialdata.select('cue').values;
             var resp = getResp(trialdata.select('response').values);
 
-            var trials = jsPsych.data.get().filter({ task: 'response' });
+            var trials = jsPsych.data.get().filter({ type: 'response' });
             var correct_trials = trials.filter({ correct: true });
             var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
             var rt = Math.round(correct_trials.select('rt').mean());
@@ -238,7 +239,7 @@
         },
         choices: "ALL_KEYS",
         data: {
-            task: 'results'
+			type: 'results',
         }
     };
 
@@ -249,7 +250,7 @@
         choices: ['n', 'm'],
         prompt: "<p>Press <strong>n</strong> for orange or <strong>m</strong> for blue.</p>",
         data: {
-            task: 'response',
+            type: 'response',
             cue: jsPsych.timelineVariable('cue'),
             correct_response: jsPsych.timelineVariable('correct_response')
         },
@@ -261,6 +262,7 @@
 
     var confidence = {
         type: jsPsychSurveyLikert,
+		data: {type: 'confidence'},
         questions: [
             {
             prompt: "Rate your confidence in your response.", 
@@ -270,9 +272,17 @@
                 "Somewhat confident", 
                 "Fairly confident", 
                 "Completely confident"
-            ]
+            ],
+			required: true
             }
         ]
+    };
+	
+    var next = {
+        type: jsPsychHtmlKeyboardResponse,
+		trial_type_specific: 'next',
+        stimulus: "<p>Press any key to continue to next trial.</p>",
+		post_trial_gap: 500
     };
 
     /* define test procedure
@@ -281,14 +291,14 @@ Can I get this to change the cue probability for the second half?
 Make test proceedures for all 4 and randomly sample which to push to timeline? (Or rotate based on counter or participant ID??)
 */
     var test_procedure_g = {
-        timeline: [test, confidence, results],
+        timeline: [test, confidence, results, next],
         timeline_variables: test_stimuli_g,
         repetitions: 1,
         randomize_order: true
     };
     
     var test_procedure_b = {
-        timeline: [test, confidence, results],
+        timeline: [test, confidence, results, next],
         timeline_variables: test_stimuli_b,
         repetitions: 1,
         randomize_order: true
@@ -324,15 +334,14 @@ Make test proceedures for all 4 and randomly sample which to push to timeline? (
         type: jsPsychHtmlKeyboardResponse,
         stimulus: function () {
 
-            var trials = jsPsych.data.get().filter({ task: 'response' });
+            var trials = jsPsych.data.get().filter({ type: 'response' });
             var correct_trials = trials.filter({ correct: true });
             var accuracy = Math.round(correct_trials.count() / trials.count() * 100);
             var rt = Math.round(correct_trials.select('rt').mean());
 
             return `<p>You responded correctly on ${accuracy}% of the trials.</p>
-          <p>Your average response time was ${rt}ms.</p>
           <p>Press any key to complete the experiment. Thank you!</p>`;
-
+			//<p>Your average response time was ${rt}ms.</p>
         }
     };
     timeline.push(debrief_block);
